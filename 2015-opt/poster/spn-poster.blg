@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: spn-poster.aux
+The style file: alpha.bst
+Database file #1: refs.bib
+You've used 4 entries,
+            2543 wiz_defined-function locations,
+            578 strings with 4850 characters,
+and the built_in function-call counts, 1355 in all, are:
+= -- 128
+> -- 65
+< -- 1
++ -- 20
+- -- 20
+* -- 77
+:= -- 236
+add.period$ -- 13
+call.type$ -- 4
+change.case$ -- 22
+chr.to.int$ -- 4
+cite$ -- 4
+duplicate$ -- 64
+empty$ -- 111
+format.name$ -- 25
+if$ -- 278
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 3
+newline$ -- 23
+num.names$ -- 12
+pop$ -- 31
+preamble$ -- 1
+purify$ -- 27
+quote$ -- 0
+skip$ -- 48
+stack$ -- 0
+substring$ -- 28
+swap$ -- 7
+text.length$ -- 1
+text.prefix$ -- 1
+top$ -- 0
+type$ -- 32
+warning$ -- 0
+while$ -- 11
+width$ -- 5
+write$ -- 52
