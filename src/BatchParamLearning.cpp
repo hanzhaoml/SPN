@@ -137,6 +137,7 @@ namespace SPN {
                         SPNetwork &spn, bool verbose) {
         // Initialization
         double train_logps, valid_logps;
+        double iter_mean, iter_var;
         size_t num_var = trains[0].size();
         double ssz;
         size_t num_trains = trains.size();
@@ -244,8 +245,11 @@ namespace SPN {
                 }
                 if (pt->type() == SPNNodeType::VARNODE) {
                     if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
-                        ((NormalNode *) pt)->set_var_mean(vst[pt][1] / vst[pt][0]);
-                        ((NormalNode *) pt)->set_var_var(vst[pt][2] / vst[pt][0]);
+                        iter_mean = vst[pt][1] / vst[pt][0];
+                        iter_var = vst[pt][2] / vst[pt][0] - iter_mean * iter_mean;
+                        iter_var = iter_var > 0 ? iter_var : epsilon;
+                        ((NormalNode *) pt)->set_var_mean(iter_mean);
+                        ((NormalNode *) pt)->set_var_var(iter_var);
                     }
                 }
             }
