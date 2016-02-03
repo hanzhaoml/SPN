@@ -192,8 +192,8 @@ namespace SPN {
                                 sst[pt][k] += ((SumNode *) pt)->weights()[k] *
                                         exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
                             }
-                        }
-                        if (pt->type() == SPNNodeType::VARNODE) {
+                        } else if (pt->type() == SPNNodeType::VARNODE) {
+                            // Normal leaf univariate distributions.
                             if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
                                 vst[pt][0] += exp(pt->dr() + pt->fr() - spn.root_->fr());
                                 vst[pt][1] += trains[n][((VarNode *) pt)->var_index()] *
@@ -220,8 +220,8 @@ namespace SPN {
                         for (size_t k = 0; k < pt->num_children(); ++k) {
                             opt[pt][k] = ((SumNode *) pt)->weights()[k];
                         }
-                    }
-                    if (pt->type() == SPNNodeType::VARNODE) {
+                    } else if (pt->type() == SPNNodeType::VARNODE) {
+                        // Normal leaf univariate distributions have two sufficient statistics.
                         if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
                             opt[pt][0] = ((NormalNode *) pt)->var_mean();
                             opt[pt][1] = ((NormalNode *) pt)->var_var();
@@ -242,8 +242,8 @@ namespace SPN {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
                         ((SumNode *) pt)->set_weight(k, (sst[pt][k] + epsilon) / ssz);
                     }
-                }
-                if (pt->type() == SPNNodeType::VARNODE) {
+                } else if (pt->type() == SPNNodeType::VARNODE) {
+                    // Normal leaf univariate distributions.
                     if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
                         iter_mean = vst[pt][1] / vst[pt][0];
                         iter_var = vst[pt][2] / vst[pt][0] - iter_mean * iter_mean;
@@ -263,6 +263,12 @@ namespace SPN {
             if (pt->type() == SPNNodeType::SUMNODE) {
                 for (size_t k = 0; k < pt->num_children(); ++k) {
                     ((SumNode *) pt)->set_weight(k, opt[pt][k]);
+                }
+            } else if (pt->type() == SPNNodeType::VARNODE) {
+                // Normal leaf univariate distributions.
+                if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
+                    ((NormalNode *) pt)->set_var_mean(opt[pt][0]);
+                    ((NormalNode *) pt)->set_var_var(opt[pt][1]);
                 }
             }
         }
