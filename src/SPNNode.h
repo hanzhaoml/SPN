@@ -295,13 +295,16 @@ namespace SPN {
         // Compute log probability density/mass.
         virtual double log_prob(double x) const = 0;
 
-    private:
-        int var_index_;
+        // Number of natural statistics in the canonical form of the
+        // exponential family distribution.
+        virtual size_t num_param() const = 0;
 
         // Friend function for output
         friend std::ostream &operator<<(std::ostream &, const VarNode &);
 
         friend class SPNetwork;
+    private:
+        int var_index_;
     };
 
     class BinNode : public VarNode {
@@ -324,6 +327,12 @@ namespace SPN {
             return std::string("BinNode");
         }
 
+        // The number of sufficient statistics for point pass distribution
+        // is 0.
+        size_t num_param() const override {
+            return 0;
+        }
+
         // Print literal string.
         std::string string() const override;
 
@@ -344,6 +353,10 @@ namespace SPN {
             } else return -std::numeric_limits<double>::infinity();
         }
 
+        // Friend function for output
+        friend std::ostream &operator<<(std::ostream &, const BinNode &);
+
+        friend class SPNetwork;
     private:
         // Value of the point taken by the binary random variable, either 0 or 1.
         double var_value_;
@@ -371,12 +384,27 @@ namespace SPN {
         // Print literal string.
         std::string string() const override;
 
-        double var_mean() const {
+        // Getters and Setters.
+        inline double var_mean() const {
             return var_mean_;
         }
 
-        double var_var() const {
+        inline double var_var() const {
             return var_var_;
+        }
+
+        inline void set_var_mean(double var_mean) {
+            var_mean_ = var_mean;
+        }
+
+        inline void set_var_var(double var_var) {
+            var_var_ = var_var;
+        }
+
+        // The sufficient statistics for normal distribution is (x, x^2),
+        // i.e., the first and the second order moments.
+        size_t num_param() const override {
+            return 2;
         }
 
         // Compute the probability and the log-probability
@@ -390,6 +418,10 @@ namespace SPN {
                    - 0.5 / var_var_ * (x - var_mean_) * (x - var_mean_);
         }
 
+        // Friend function for output
+        friend std::ostream &operator<<(std::ostream &, const NormalNode &);
+
+        friend class SPNetwork;
     private:
         double var_mean_;
         double var_var_;

@@ -353,6 +353,7 @@ namespace SPN {
         // Set the value of leaf nodes first
         int var_index, cindex;
         double max_logp, sum_exp, tmp_val;
+        // Compute forward values for the rest of internal nodes.
         for (VarNode *pt : dist_nodes_) {
             var_index = pt->var_index();
             if (mask[var_index]) {
@@ -361,7 +362,6 @@ namespace SPN {
                 pt->fr_ = pt->log_prob(input[var_index]);
             }
         }
-        // Compute forward values for the rest of internal nodes.
         for (SPNNode *pt : forward_order_) {
             if (pt->type() == SPNNodeType::SUMNODE) {
                 // Avoid underflow

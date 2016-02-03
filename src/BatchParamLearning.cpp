@@ -147,7 +147,7 @@ namespace SPN {
         double optimal_valid_logp = -std::numeric_limits<double>::infinity();
         double epsilon = std::numeric_limits<double>::epsilon();
         // Sufficient statistics for update in each iteration.
-        std::map<SPNNode *, std::vector<double>> sst, opt;
+        std::map<SPNNode *, std::vector<double>> sst, vst, opt;
         // Store the function values during the optimization.
         std::vector<double> train_funcs, valid_funcs;
         // Initialize SST based on the structure of the network.
@@ -159,12 +159,23 @@ namespace SPN {
                 opt.insert({pt, std::vector<double>(pt->num_children())});
             }
         }
+        // Initialize VST based on the number of parameters of each leaf
+        // univariate distribution.
+        for (VarNode *pt : spn.dist_nodes()) {
+            vst.insert({pt, std::vector<double>(pt->num_param() + 1)});
+            opt.insert({pt, std::vector<double>(pt->num_param())});
+        }
         // Start expectation maximization.
         for (size_t t = 0; t < num_iters_; ++t) {
             // Clean previous records.
             train_logps = 0.0;
             valid_logps = 0.0;
             for (auto &pvec : sst) {
+                for (size_t k = 0; k < pvec.second.size(); ++k) {
+                    pvec.second[k] = 0.0;
+                }
+            }
+            for (auto &pvec : vst) {
                 for (size_t k = 0; k < pvec.second.size(); ++k) {
                     pvec.second[k] = 0.0;
                 }
@@ -179,6 +190,15 @@ namespace SPN {
                             for (size_t k = 0; k < pt->num_children(); ++k) {
                                 sst[pt][k] += ((SumNode *) pt)->weights()[k] *
                                         exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
+                            }
+                        }
+                        if (pt->type() == SPNNodeType::VARNODE) {
+                            if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
+                                vst[pt][0] += exp(pt->dr() + pt->fr() - spn.root_->fr());
+                                vst[pt][1] += trains[n][((VarNode *) pt)->var_index()] *
+                                        exp(pt->dr() + pt->fr() - spn.root_->fr());
+                                vst[pt][2] += pow(trains[n][((VarNode *) pt)->var_index()], 2) *
+                                        exp(pt->dr() + pt->fr() - spn.root_->fr());
                             }
                         }
                     }
@@ -200,6 +220,12 @@ namespace SPN {
                             opt[pt][k] = ((SumNode *) pt)->weights()[k];
                         }
                     }
+                    if (pt->type() == SPNNodeType::VARNODE) {
+                        if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
+                            opt[pt][0] = ((NormalNode *) pt)->var_mean();
+                            opt[pt][1] = ((NormalNode *) pt)->var_var();
+                        }
+                    }
                 }
             }
             if (verbose) {
@@ -214,6 +240,12 @@ namespace SPN {
                     }
                     for (size_t k = 0; k < pt->num_children(); ++k) {
                         ((SumNode *) pt)->set_weight(k, (sst[pt][k] + epsilon) / ssz);
+                    }
+                }
+                if (pt->type() == SPNNodeType::VARNODE) {
+                    if (((VarNode *) pt)->distribution() == VarNodeType::NORMALNODE) {
+                        ((NormalNode *) pt)->set_var_mean(vst[pt][1] / vst[pt][0]);
+                        ((NormalNode *) pt)->set_var_var(vst[pt][2] / vst[pt][0]);
                     }
                 }
             }
