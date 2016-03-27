@@ -764,13 +764,16 @@ namespace SPN {
             if (verbose) {
                 std::cout << t << "," << train_funcs[t] << "," << valid_funcs[t] << std::endl;
             }
+            // Computation of the L-BFGS direction at current iteration.
             // Update current history record.
             for (SPNNode *pt : spn.top_down_order()) {
                 if (pt->type() == SPNNodeType::SUMNODE) {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
                         // Update history and previous.
-                        history_param[curr_hist][pt][k] = ((SumNode *) pt)->weights()[k] - prev_param[pt][k];
-                        history_grads[curr_hist][pt][k] = sst[pt][k] - prev_grads[pt][k];
+                        if (t > 0) {
+                            history_param[curr_hist][pt][k] = ((SumNode *) pt)->weights()[k] - prev_param[pt][k];
+                            history_grads[curr_hist][pt][k] = sst[pt][k] - prev_grads[pt][k];
+                        }
                         prev_param[pt][k] = ((SumNode *) pt)->weights()[k];
                         prev_grads[pt][k] = sst[pt][k];
                         // Update the L-BFGS vector.
@@ -778,13 +781,13 @@ namespace SPN {
                     }
                 }
             }
-
+            if (t > 0)  curr_hist += 1;
             curr_hist %= history_window_;
             max_hist = std::min(history_window_, t);
-            double alpha = 0.0, pho = 0.0;
+            double alpha = 0.0, beta = 0.0, pho = 0.0;
             int hist_index = 0;
             for (int h = 0; h < max_hist; ++h) {
-                hist_index = (curr_hist - h + history_window_) % history_window_;
+                hist_index = (curr_hist - h - 1 + history_window_) % history_window_;
                 // Compute the inner product coefficient alpha_h in the L-BFGS algorithm.
                 alpha = 0.0;
                 pho = 0.0;
@@ -806,17 +809,39 @@ namespace SPN {
                         }
                     }
                 }
-                // r = H_{-m} * lbfgs_grad. In this implementation, H_{-m} is fixed to be the identity matrix.
-                
             }
-            curr_hist += 1;
-            // Weight update using projected gradient descent.
+            // r = H_{-m} * lbfgs_grad. In this implementation, H_{-m} is fixed to be the identity matrix.
+            for (int h = max_hist-1; h >= 0; --h) {
+                hist_index = (curr_hist - h - 1 + history_window_) % history_window_;
+                // Compute the inner product coefficient beta_h between in the L-BFGS algorithm.
+                beta = 0.0;
+                for (SPNNode *pt : spn.top_down_order()) {
+                    if (pt->type() == SPNNodeType::SUMNODE) {
+                        for (size_t k = 0; k < pt->num_children(); ++k) {
+                            beta += history_grads[hist_index][pt][k] * lbfgs_grads[pt][k];
+                        }
+                    }
+                }
+                beta *= history_phos[hist_index];
+                // Backward updating of the L-BFGS vector.
+                for (SPNNode *pt : spn.top_down_order()) {
+                    if (pt->type() == SPNNodeType::SUMNODE) {
+                        if (pt->type() == SPNNodeType::SUMNODE) {
+                            for (size_t k = 0; k < pt->num_children(); ++k) {
+                                lbfgs_grads[pt][k] += history_param[hist_index][pt][k] *
+                                        (history_alphas[hist_index] - beta);
+                            }
+                        }
+                    }
+                }
+            }
+            // Weight update using projected L-BFGS.
             for (SPNNode *pt : spn.top_down_order()) {
                 if (pt->type() == SPNNodeType::SUMNODE) {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
                         original_weight = ((SumNode *) pt)->weights()[k];
-                        new_weight = original_weight + lrate * sst[pt][k] > 0 ?
-                                     original_weight + lrate * sst[pt][k] : proj_eps_;
+                        new_weight = original_weight + lrate * lbfgs_grads[pt][k] > 0 ?
+                                     original_weight + lrate * lbfgs_grads[pt][k] : proj_eps_;
                         ((SumNode *) pt)->set_weight(k, new_weight);
                     }
                 }
