@@ -42,6 +42,9 @@ namespace SPN {
         // Renormalize the weight before parameter learning.
         spn.weight_projection();
         // Start expectation maximization.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters; ++t) {
             // Clean previous records.
             train_logps = 0.0;
@@ -154,6 +157,9 @@ namespace SPN {
             }
         }
         // Start exponentiated gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters; ++t) {
             // Not good fitting, shrinking the weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -283,6 +289,9 @@ namespace SPN {
             }
         }
         // Start projected gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters; ++t) {
             // Not good fitting, shrinking the weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -410,6 +419,9 @@ namespace SPN {
             }
         }
         // Start projected gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters; ++t) {
             // Not good fitting, shrinking the weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -558,6 +570,9 @@ namespace SPN {
         // Random initialization.
         spn.set_random_params(seed_);
         // Online Collapsed Variational Bayesian inference.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters; ++t) {
             // Clean previous records.
             train_logps = 0.0;

@@ -42,6 +42,9 @@ namespace SPN {
             }
         }
         // Start projected gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters_; ++t) {
             // Not good fitting, shrinking the weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -167,6 +170,9 @@ namespace SPN {
             opt.insert({pt, std::vector<double>(pt->num_param())});
         }
         // Start expectation maximization.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters_; ++t) {
             // Clean previous records.
             train_logps = 0.0;
@@ -314,6 +320,9 @@ namespace SPN {
         // Random initialization.
         spn.set_random_params(seed_);
         // Start collapsed variational bayes expectation maximization.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters_; ++t) {
             // Clean previous records.
             train_logps = 0.0;
@@ -429,6 +438,9 @@ namespace SPN {
             }
         }
         // Start projected gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
         for (size_t t = 0; t < num_iters_; ++t) {
             // Not good fitting, shrinking weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -543,6 +555,9 @@ namespace SPN {
                 sst.insert({pt, std::vector<double>(pt->num_children())});
                 opt.insert({pt, std::vector<double>(pt->num_children())});
             }
+        }
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
         }
         for (size_t t = 0; t < num_iters_; ++t) {
             // Not good fitting, shrinking the weight.
