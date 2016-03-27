@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     // Hyperparameters for projected gradient descent algorithm.
     uint seed = 42;
     int num_iters = 50;
-    uint history_window = 20;
+    uint history_window = 5;
     double stop_thred = 1e-2;
     double lap_smooth = 1e-3;
     double proj_eps = 1e-2;
