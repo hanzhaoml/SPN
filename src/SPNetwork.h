@@ -140,6 +140,8 @@ namespace SPN {
 
         friend class ProjectedGD;
 
+        friend class LBFGS;
+
         friend class OnlineExpectMax;
 
         friend class OnlineCollapsedVB;

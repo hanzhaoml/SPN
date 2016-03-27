@@ -662,11 +662,18 @@ namespace SPN {
         // Local learning rate.
         double lrate = lrate_;
         // Sufficient statistics for update in each iteration
-        // and optimal weights enconutered during optimization.
+        // and optimal weights encountered during optimization.
         std::map<SPNNode *, std::vector<double>> sst, opt;
         // History parameter vectors and gradient vectors.
         std::vector<std::map<SPNNode *, std::vector<double>>> history_grads(history_window_);
         std::vector<std::map<SPNNode *, std::vector<double>>> history_param(history_window_);
+        std::vector<double> history_alphas(history_window_, 0.0);
+        std::vector<double> history_phos(history_window_, 0.0);
+        // Previous parameter vector and gradient vector.
+        std::map<SPNNode *, std::vector<double>> prev_grads;
+        std::map<SPNNode *, std::vector<double>> prev_param;
+        // L-BFGS gradient vector.
+        std::map<SPNNode *, std::vector<double>> lbfgs_grads;
         // Store the function values during the optimization.
         std::vector<double> train_funcs, valid_funcs;
         // Masks for inference.
@@ -675,18 +682,26 @@ namespace SPN {
         // Initialize SST based on the structure of the network.
         for (SPNNode *pt : spn.top_down_order()) {
             if (pt->type() == SPNNodeType::SUMNODE) {
+                // Store current gradient vector and the optimal parameter vector.
                 sst.insert({pt, std::vector<double>(pt->num_children())});
                 opt.insert({pt, std::vector<double>(pt->num_children())});
+                // Store previous gradient vector and previous parameter vector.
+                prev_grads.insert({pt, std::vector<double>(pt->num_children(), 0.0)});
+                prev_param.insert({pt, std::vector<double>(pt->num_children(), 0.0)});
+                // Store gradient vectors and parameter vectors in the history window.
                 for (int i = 0; i < history_window_; ++i) {
                     history_param[i].insert({pt, std::vector<double>(pt->num_children())});
                     history_grads[i].insert({pt, std::vector<double>(pt->num_children())});
                 }
+                // Store the L-BFGS gradient vector.
+                lbfgs_grads.insert({pt, std::vector<double>(pt->num_children())});
             }
         }
         // Start projected gradient descent.
         if (verbose) {
             std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
         }
+        int max_hist = 0, curr_hist = 0;
         for (size_t t = 0; t < num_iters_; ++t) {
             // Not good fitting, shrinking the weight.
             if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
@@ -700,6 +715,7 @@ namespace SPN {
                     pvec.second[k] = 0.0;
                 }
             }
+            // Compute the gradient vector in the current iteration.
             for (size_t n = 0; n < num_trains + num_valids; ++n) {
                 // Bottom-up and top-down passes of the network.
                 if (n < num_trains) {
@@ -723,6 +739,7 @@ namespace SPN {
                 if (pt->type() == SPNNodeType::SUMNODE) {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
                         sst[pt][k] -= num_trains * exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
+                        sst[pt][k] /= num_trains;
                     }
                 }
             }
@@ -747,11 +764,56 @@ namespace SPN {
             if (verbose) {
                 std::cout << t << "," << train_funcs[t] << "," << valid_funcs[t] << std::endl;
             }
+            // Update current history record.
+            for (SPNNode *pt : spn.top_down_order()) {
+                if (pt->type() == SPNNodeType::SUMNODE) {
+                    for (size_t k = 0; k < pt->num_children(); ++k) {
+                        // Update history and previous.
+                        history_param[curr_hist][pt][k] = ((SumNode *) pt)->weights()[k] - prev_param[pt][k];
+                        history_grads[curr_hist][pt][k] = sst[pt][k] - prev_grads[pt][k];
+                        prev_param[pt][k] = ((SumNode *) pt)->weights()[k];
+                        prev_grads[pt][k] = sst[pt][k];
+                        // Update the L-BFGS vector.
+                        lbfgs_grads[pt][k] = sst[pt][k];
+                    }
+                }
+            }
+
+            curr_hist %= history_window_;
+            max_hist = std::min(history_window_, t);
+            double alpha = 0.0, pho = 0.0;
+            int hist_index = 0;
+            for (int h = 0; h < max_hist; ++h) {
+                hist_index = (curr_hist - h + history_window_) % history_window_;
+                // Compute the inner product coefficient alpha_h in the L-BFGS algorithm.
+                alpha = 0.0;
+                pho = 0.0;
+                for (SPNNode *pt : spn.top_down_order()) {
+                    if (pt->type() == SPNNodeType::SUMNODE) {
+                        for (size_t k = 0; k < pt->num_children(); ++k) {
+                            pho += history_param[hist_index][pt][k] * history_grads[hist_index][pt][k];
+                            alpha += history_param[hist_index][pt][k] * lbfgs_grads[pt][k];
+                        }
+                    }
+                }
+                history_phos[hist_index] = 1.0 / pho;
+                history_alphas[hist_index] = alpha / pho;
+                // Forward updating of the L-BFGS vector.
+                for (SPNNode *pt : spn.top_down_order()) {
+                    if (pt->type() == SPNNodeType::SUMNODE) {
+                        for (size_t k = 0; k < pt->num_children(); ++k) {
+                            lbfgs_grads[pt][k] -= history_alphas[hist_index] * history_grads[hist_index][pt][k];
+                        }
+                    }
+                }
+                // r = H_{-m} * lbfgs_grad. In this implementation, H_{-m} is fixed to be the identity matrix.
+                
+            }
+            curr_hist += 1;
             // Weight update using projected gradient descent.
             for (SPNNode *pt : spn.top_down_order()) {
                 if (pt->type() == SPNNodeType::SUMNODE) {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
-                        sst[pt][k] /= num_trains;
                         original_weight = ((SumNode *) pt)->weights()[k];
                         new_weight = original_weight + lrate * sst[pt][k] > 0 ?
                                      original_weight + lrate * sst[pt][k] : proj_eps_;
