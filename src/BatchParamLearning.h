@@ -111,6 +111,36 @@ namespace SPN {
         double shrink_weight_;
     };
 
+    // L-BFGS algorithm for batch training of SPNs.
+    class LBFGS : public BatchParamLearning {
+    public:
+        LBFGS() : num_iters_(50), proj_eps_(1e-2), stop_thred_(1e-3),
+                  lrate_(1e-1), shrink_weight_(8e-1), history_window_(5) {
+            algo_name_ = "BatchLBFGS";
+        }
+
+        LBFGS(int num_iters, double proj_eps, double stop_thred,
+              double lrate, double shrink_weight, uint history_window) :
+                num_iters_(num_iters), proj_eps_(proj_eps), stop_thred_(stop_thred),
+                lrate_(lrate), shrink_weight_(shrink_weight), history_window_(history_window) {
+            algo_name_ = "BatchLBFGS";
+        }
+
+        virtual ~LBFGS() = default;
+
+        void fit(const std::vector<std::vector<double>> &trains,
+                 const std::vector<std::vector<double>> &valids,
+                 SPNetwork &spn, bool verbose = false) override;
+
+    private:
+        int num_iters_;
+        double proj_eps_;
+        double stop_thred_;
+        double lrate_;
+        double shrink_weight_;
+        uint history_window_;
+    };
+
     // Exponentiated gradient for batch training of SPNs.
     class ExpoGD : public BatchParamLearning {
     public:

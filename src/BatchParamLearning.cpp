@@ -648,4 +648,131 @@ namespace SPN {
         // Re-normalize each sum node.
         spn.weight_projection(1e-3);
     }
+
+    void LBFGS::fit(const std::vector<std::vector<double>> &trains, const std::vector<std::vector<double>> &valids,
+                    SPNetwork &spn, bool verbose) {
+        // Initialization
+        size_t num_var = trains[0].size();
+        std::vector<double> all_one(num_var, 1.0);
+        double optimal_valid_logp = -std::numeric_limits<double>::infinity();
+        double train_logps, valid_logps;
+        double original_weight, new_weight;
+        size_t num_trains = trains.size();
+        size_t num_valids = valids.size();
+        // Local learning rate.
+        double lrate = lrate_;
+        // Sufficient statistics for update in each iteration
+        // and optimal weights enconutered during optimization.
+        std::map<SPNNode *, std::vector<double>> sst, opt;
+        // History parameter vectors and gradient vectors.
+        std::vector<std::map<SPNNode *, std::vector<double>>> history_grads(history_window_);
+        std::vector<std::map<SPNNode *, std::vector<double>>> history_param(history_window_);
+        // Store the function values during the optimization.
+        std::vector<double> train_funcs, valid_funcs;
+        // Masks for inference.
+        std::vector<bool> mask_false(num_var, false);
+        std::vector<bool> mask_true(num_var, true);
+        // Initialize SST based on the structure of the network.
+        for (SPNNode *pt : spn.top_down_order()) {
+            if (pt->type() == SPNNodeType::SUMNODE) {
+                sst.insert({pt, std::vector<double>(pt->num_children())});
+                opt.insert({pt, std::vector<double>(pt->num_children())});
+                for (int i = 0; i < history_window_; ++i) {
+                    history_param[i].insert({pt, std::vector<double>(pt->num_children())});
+                    history_grads[i].insert({pt, std::vector<double>(pt->num_children())});
+                }
+            }
+        }
+        // Start projected gradient descent.
+        if (verbose) {
+            std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
+        }
+        for (size_t t = 0; t < num_iters_; ++t) {
+            // Not good fitting, shrinking the weight.
+            if (t > 1 && train_funcs[t-1] < train_funcs[t-2]) {
+                lrate *= shrink_weight_;
+            }
+            // Clean previous records.
+            train_logps = 0.0;
+            valid_logps = 0.0;
+            for (auto &pvec : sst) {
+                for (size_t k = 0; k < pvec.second.size(); ++k) {
+                    pvec.second[k] = 0.0;
+                }
+            }
+            for (size_t n = 0; n < num_trains + num_valids; ++n) {
+                // Bottom-up and top-down passes of the network.
+                if (n < num_trains) {
+                    train_logps += spn.EvalDiff(trains[n], mask_false);
+                    // Compute gradients.
+                    for (SPNNode *pt : spn.top_down_order()) {
+                        if (pt->type() == SPNNodeType::SUMNODE) {
+                            // Projected gradient descent update formula.
+                            for (size_t k = 0; k < pt->num_children(); ++k) {
+                                sst[pt][k] += exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
+                            }
+                        }
+                    }
+                } else {
+                    valid_logps += spn.EvalDiff(valids[n - num_trains], mask_false);
+                }
+            }
+            // Propagate value of all one vector.
+            spn.EvalDiff(all_one, mask_true);
+            for (SPNNode *pt : spn.top_down_order()) {
+                if (pt->type() == SPNNodeType::SUMNODE) {
+                    for (size_t k = 0; k < pt->num_children(); ++k) {
+                        sst[pt][k] -= num_trains * exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
+                    }
+                }
+            }
+            train_logps -= num_trains * spn.root_->fr();
+            valid_logps -= num_valids * spn.root_->fr();
+            train_logps /= num_trains;
+            valid_logps /= num_valids;
+            // Store statistics.
+            train_funcs.push_back(train_logps);
+            valid_funcs.push_back(valid_logps);
+            // Update the optimal model weights.
+            if (valid_logps > optimal_valid_logp) {
+                optimal_valid_logp = valid_logps;
+                for (SPNNode *pt : spn.top_down_order()) {
+                    if (pt->type() == SPNNodeType::SUMNODE) {
+                        for (size_t k = 0; k < pt->num_children(); ++k) {
+                            opt[pt][k] = ((SumNode *) pt)->weights()[k];
+                        }
+                    }
+                }
+            }
+            if (verbose) {
+                std::cout << t << "," << train_funcs[t] << "," << valid_funcs[t] << std::endl;
+            }
+            // Weight update using projected gradient descent.
+            for (SPNNode *pt : spn.top_down_order()) {
+                if (pt->type() == SPNNodeType::SUMNODE) {
+                    for (size_t k = 0; k < pt->num_children(); ++k) {
+                        sst[pt][k] /= num_trains;
+                        original_weight = ((SumNode *) pt)->weights()[k];
+                        new_weight = original_weight + lrate * sst[pt][k] > 0 ?
+                                     original_weight + lrate * sst[pt][k] : proj_eps_;
+                        ((SumNode *) pt)->set_weight(k, new_weight);
+                    }
+                }
+            }
+            // Stop criterion.
+            if (t > 0 && fabs(train_funcs[t] - train_funcs[t-1]) < stop_thred_) {
+                break;
+            }
+        }
+        // Restore the optimal model weights during the optization.
+        for (SPNNode *pt : spn.top_down_order()) {
+            if (pt->type() == SPNNodeType::SUMNODE) {
+                for (size_t k = 0; k < pt->num_children(); ++k) {
+                    ((SumNode *) pt)->set_weight(k, opt[pt][k]);
+                }
+            }
+        }
+        // Renormalize the weight after parameter learning.
+        spn.weight_projection(1e-3);
+    }
 }
