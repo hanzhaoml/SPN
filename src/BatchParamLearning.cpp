@@ -3,6 +3,7 @@
 //
 
 #include "BatchParamLearning.h"
+#include <algorithm>
 #include <map>
 #include <queue>
 #include <stack>
@@ -783,7 +784,7 @@ namespace SPN {
             }
             if (t > 0)  curr_hist += 1;
             curr_hist %= history_window_;
-            max_hist = std::min(history_window_, t);
+            max_hist = std::min(history_window_, uint(t));
             double alpha = 0.0, beta = 0.0, pho = 0.0;
             int hist_index = 0;
             for (int h = 0; h < max_hist; ++h) {

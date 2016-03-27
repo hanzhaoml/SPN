@@ -28,6 +28,7 @@ using SPN::ExpoGD;
 using SPN::SMA;
 using SPN::ExpectMax;
 using SPN::CollapsedVB;
+using SPN::LBFGS;
 using SPN::utils::split;
 
 int main(int argc, char *argv[]) {
@@ -37,6 +38,7 @@ int main(int argc, char *argv[]) {
     // Hyperparameters for projected gradient descent algorithm.
     uint seed = 42;
     int num_iters = 50;
+    uint history_window = 20;
     double stop_thred = 1e-2;
     double lap_smooth = 1e-3;
     double proj_eps = 1e-2;
@@ -111,6 +113,8 @@ int main(int argc, char *argv[]) {
         learning = new ExpectMax(num_iters, stop_thred, lap_smooth);
     } else if (algo_name == "cvb") {
         learning = new CollapsedVB(num_iters, stop_thred, lrate, prior_scale, seed);
+    } else if (algo_name == "lbfgs") {
+        learning = new LBFGS(num_iters, proj_eps, stop_thred, lrate, shrink_weight, history_window);
     } else {
         std::cerr << "Please choose from pgd, eg, sma, em or cvb" << std::endl;
         std::exit(-1);
