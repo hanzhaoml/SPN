@@ -86,14 +86,19 @@ namespace SPN {
     class ProjectedGD : public BatchParamLearning {
     public:
         ProjectedGD() : num_iters_(50), proj_eps_(1e-2),
-                        stop_thred_(1e-3), lrate_(1e-1), shrink_weight_(8e-1) {
+                        stop_thred_(1e-3), lrate_(1e-1),
+                        shrink_weight_(8e-1), map_prior_(true),
+                        prior_scale_(100.0), seed_(42) {
             algo_name_ = "BatchProjectedGD";
         }
 
         ProjectedGD(int num_iters, double proj_eps, double stop_thred,
-                    double lrate, double shrink_weight) :
+                    double lrate, double shrink_weight, bool map_prior=true,
+                    double prior_scale=100.0, uint seed=42) :
                 num_iters_(num_iters), proj_eps_(proj_eps),
-                stop_thred_(stop_thred), lrate_(lrate), shrink_weight_(shrink_weight) {
+                stop_thred_(stop_thred), lrate_(lrate),
+                shrink_weight_(shrink_weight), map_prior_(map_prior),
+                prior_scale_(prior_scale), seed_(seed) {
             algo_name_ = "BatchProjectedGD";
         }
 
@@ -104,6 +109,9 @@ namespace SPN {
                  SPNetwork &spn, bool verbose = false) override;
 
     private:
+        uint seed_ = 42;
+        bool map_prior_;
+        double prior_scale_;
         int num_iters_;
         double proj_eps_;
         double stop_thred_;

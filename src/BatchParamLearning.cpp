@@ -23,6 +23,7 @@ namespace SPN {
         double optimal_valid_logp = -std::numeric_limits<double>::infinity();
         double train_logps, valid_logps;
         double original_weight, new_weight;
+        double prior_scale = prior_scale_;
         size_t num_trains = trains.size();
         size_t num_valids = valids.size();
         // Local learning rate.
@@ -35,13 +36,22 @@ namespace SPN {
         // Masks for inference.
         std::vector<bool> mask_false(num_var, false);
         std::vector<bool> mask_true(num_var, true);
+        // Prior parameter alpha for MAP optimization.
+        std::map<SPNNode *, std::vector<double>> alphas;
         // Initialize SST based on the structure of the network.
         for (SPNNode *pt : spn.top_down_order()) {
             if (pt->type() == SPNNodeType::SUMNODE) {
                 sst.insert({pt, std::vector<double>(pt->num_children())});
                 opt.insert({pt, std::vector<double>(pt->num_children())});
+                // Initialize the prior alpha_k = 100 * weight_k
+                auto prior_weights = ((SumNode *) pt)->weights();
+                std::for_each(prior_weights.begin(), prior_weights.end(),
+                              [prior_scale](double& d) {d *= prior_scale;});
+                alphas.insert({pt, prior_weights});
             }
         }
+        // Random initialization.
+        spn.set_random_params(seed_);
         // Start projected gradient descent.
         if (verbose) {
             std::cout << "#iteration" << "," << "train-lld" << "," << "valid-lld" << std::endl;
@@ -110,8 +120,11 @@ namespace SPN {
             for (SPNNode *pt : spn.top_down_order()) {
                 if (pt->type() == SPNNodeType::SUMNODE) {
                     for (size_t k = 0; k < pt->num_children(); ++k) {
-                        sst[pt][k] /= num_trains;
                         original_weight = ((SumNode *) pt)->weights()[k];
+                        if (map_prior_) {
+                            sst[pt][k] += (alphas[pt][k] - 1) / original_weight;
+                        }
+                        sst[pt][k] /= num_trains;
                         new_weight = original_weight + lrate * sst[pt][k] > 0 ?
                                      original_weight + lrate * sst[pt][k] : proj_eps_;
                         ((SumNode *) pt)->set_weight(k, new_weight);
