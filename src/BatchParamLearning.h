@@ -62,7 +62,7 @@ namespace SPN {
         }
 
         CollapsedVB(int num_iters, double stop_thred, double lrate,
-                     double prior_scale, uint seed=42) :
+                    double prior_scale, uint seed=42) :
                 num_iters_(num_iters), stop_thred_(stop_thred), lrate_(lrate),
                 prior_scale_(prior_scale), seed_(seed) {
             algo_name_ = "BatchCollapsedVB";

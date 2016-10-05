@@ -43,7 +43,7 @@ namespace SPN {
             if (pt->type() == SPNNodeType::SUMNODE) {
                 sst.insert({pt, std::vector<double>(pt->num_children())});
                 opt.insert({pt, std::vector<double>(pt->num_children())});
-                // Initialize the prior alpha_k = 100 * weight_k
+                // Initialize the prior alpha_k based on the weights of the network.
                 auto prior_weights = ((SumNode *) pt)->weights();
                 std::for_each(prior_weights.begin(), prior_weights.end(),
                               [prior_scale](double& d) {d *= prior_scale;});
