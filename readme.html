@@ -1,0 +1,40 @@
+<h1>Parameter Learning of Sum-Product Networks</h1>
+
+<p>@Author: <a href="http://www.cs.cmu.edu/~hzhao1/">Han Zhao</a></p>
+
+<p>@Note: Please cite the following paper if you use the tool developed in this package.</p>
+
+<p><strong>A Unified Approach for Learning the Parameters of Sum-Product Networks</strong>
+by H. Zhao, P. Poupart and G. Gordon, NIPS 2016.</p>
+
+<p><strong>Collapsed Variational Inference for Sum-Product Networks</strong>
+by H. Zhao, T. Adel, G. Gordon and B. Amos, ICML 2016.</p>
+
+<p>@Required lib:
+ - Boost
+ - CMake</p>
+
+<hr />
+
+<p>The software is written in C++11 for the purpose of parameter learning 
+in Sum-Product Networks. It supports batch learning, online learning as 
+well as streaming learning. This software implements the following learning
+algorithms for SPNs:</p>
+
+<ol>
+<li>Projected Gradient Descent.</li>
+<li>Exponentiated Gradient Method.</li>
+<li>Sequential Monomial Approximation (NIPS 2016).</li>
+<li>Concave-Convex Procedure/Expectation Maximization (NIPS 2016).</li>
+<li>Collapsed Variational Inference (ICML 2016).</li>
+</ol>
+
+<hr />
+
+<p>Usage: </p>
+
+<ol>
+<li>batch_learning.cpp, online_learning.cpp and stream_learning.cpp should be the starting source files in order to understand the package.</li>
+<li>All the code about network structures is implemented in SPNNode.[h|cpp] and SPNetwork.[h|cpp].</li>
+<li>Learning algorithms under different learning scenarios, e.g., batch, online and streaming, are implemented separately in the corresponding *.cpp files.</li>
+</ol>
