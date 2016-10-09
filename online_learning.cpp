@@ -28,6 +28,7 @@ using SPN::OnlineSMA;
 using SPN::OnlineExpectMax;
 using SPN::OnlineCollapsedVB;
 using SPN::OnlineADF;
+using SPN::OnlineBMM;
 using SPN::utils::split;
 
 int main(int argc, char** argv) {
@@ -114,6 +115,8 @@ int main(int argc, char** argv) {
         learning = new OnlineCollapsedVB(stop_thred, lrate, prior_scale, seed);
     } else if (algo_name == "adf") {
         learning = new OnlineADF(stop_thred, prior_scale);
+    } else if (algo_name == "bmm") {
+        learning = new OnlineBMM(stop_thred, prior_scale);
     } else {
         std::cerr << "Please choose from pgd, eg, sma, em or cvb" << std::endl;
         std::exit(-1);

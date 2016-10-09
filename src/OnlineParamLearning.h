@@ -175,6 +175,27 @@ namespace SPN {
         double stop_thred_;
         double prior_scale_;
     };
+
+    class OnlineBMM : public OnlineParamLearning {
+    public:
+        OnlineBMM() : stop_thred_(1e-3), prior_scale_(1e2) {
+            algo_name_ = "OnlineBMM";
+        }
+
+        OnlineBMM(double stop_thred, double prior_scale) : stop_thred_(stop_thred), prior_scale_(prior_scale) {
+            algo_name_ = "OnlineBMM";
+        }
+
+        virtual ~OnlineBMM() = default;
+
+        void fit(std::vector<std::vector<double>> &trains,
+                 std::vector<std::vector<double>> &valids, SPNetwork &spn,
+                 int num_iters=1, bool verbose=false) override;
+
+    private:
+        double stop_thred_;
+        double prior_scale_;
+    };
 }
 
 #endif //SPN_EM_ONLINEPARAMLEARNING_H
