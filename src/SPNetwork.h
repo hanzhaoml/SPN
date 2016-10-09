@@ -146,6 +146,8 @@ namespace SPN {
 
         friend class OnlineCollapsedVB;
 
+        friend class OnlineADF;
+
         friend class OnlineExpoGD;
 
         friend class OnlineProjectedGD;

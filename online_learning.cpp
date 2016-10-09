@@ -27,9 +27,10 @@ using SPN::OnlineExpoGD;
 using SPN::OnlineSMA;
 using SPN::OnlineExpectMax;
 using SPN::OnlineCollapsedVB;
+using SPN::OnlineADF;
 using SPN::utils::split;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char** argv) {
     // Positional program parameters.
     std::string model_filename, training_filename, valid_filename, test_filename, algo_name;
     std::string output_model_filename;
@@ -111,6 +112,8 @@ int main(int argc, char *argv[]) {
         learning = new OnlineExpectMax(stop_thred, lap_lambda);
     } else if (algo_name == "cvb") {
         learning = new OnlineCollapsedVB(stop_thred, lrate, prior_scale, seed);
+    } else if (algo_name == "adf") {
+        learning = new OnlineADF(stop_thred, prior_scale);
     } else {
         std::cerr << "Please choose from pgd, eg, sma, em or cvb" << std::endl;
         std::exit(-1);

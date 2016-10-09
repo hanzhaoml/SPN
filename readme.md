@@ -11,8 +11,8 @@ by H. Zhao, P. Poupart and G. Gordon, NIPS 2016.
 by H. Zhao, T. Adel, G. Gordon and B. Amos, ICML 2016.
 
 @Required lib:
- - Boost
- - CMake
+ - Boost (>= 1.55)
+ - CMake (>= 2.80)
 
 -------------------------------------------------------------------------------
 The software is written in C++11 for the purpose of parameter learning 
