@@ -425,7 +425,7 @@ namespace SPN {
     private:
         double var_mean_;
         double var_var_;
-        static constexpr double PI = boost::math::constants::pi<double>();
+        static constexpr double PI = 3.1415926535;
     };
 }
 
