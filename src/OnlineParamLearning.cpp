@@ -683,6 +683,7 @@ namespace SPN {
         // Hyperparameters.
         double prior_scale = prior_scale_;
         double sum_alpha = 0.0;
+        double fudge_factor = 1e-2;
         for (SPNNode *pt : spn.top_down_order()) {
             auto sum_pt = dynamic_cast<SumNode*>(pt);
             if (sum_pt) {
@@ -749,12 +750,8 @@ namespace SPN {
                         auto sum_pt = (SumNode*) pt;
                         // Compute the lambda statistics in the paper.
                         for (size_t k = 0; k < pt->num_children(); ++k) {
-                            sst[pt][k] = ((SumNode *) pt)->weights()[k] *
-                                          exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
-                            std::cerr << "Iteration number t = " << t << ", instance number n = " << n << std::endl;
-                            std::cerr << "weight = " << ((SumNode *) pt)->weights()[k] << std::endl;
-                            std::cerr << "sst = " << sst[pt][k] << std::endl;
-                            std::cerr << "-----------------------------" << std::endl;
+                            sst[pt][k] = sum_pt->weights()[k] *
+                                    exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
                             assert (sst[pt][k] >= 0.0 && sst[pt][k] <= 1.0);
                         }
                     }
@@ -766,8 +763,9 @@ namespace SPN {
                         auto sum_pt = (SumNode*) pt;
                         for (size_t k = 0; k < pt->num_children(); ++k) {
                             sum_pt->values_[k] = 0.0;
-                            sum_pt->values_[k] += (1.0 - sst[pt][k]) * log((prior_scale * sum_pt->weights()[k] - 0.5)
-                                                                           / (prior_scale - 0.5));
+                            sum_pt->values_[k] += (1.0 - sst[pt][k]) *
+                                    log(std::max(fudge_factor, (prior_scale * sum_pt->weights()[k] - 0.5)) /
+                                                (prior_scale - 0.5));
                             sum_pt->values_[k] += sst[pt][k] * log((prior_scale * sum_pt->weights()[k] + 0.5)
                                                                    / (prior_scale + 0.5));
                             sum_pt->values_[k] = (prior_scale - 0.5) * exp(sum_pt->values_[k]) + 0.5;
@@ -775,15 +773,8 @@ namespace SPN {
                         // Update model parameter using the posterior mean of the one-step update posterior.
                         sum_alpha = 0.0;
                         for (auto v : sum_pt->values_) sum_alpha += v;
-                        std::cerr << "Iteration number t = " << t << ", instance number n = " << n << std::endl;
-                        std::cerr << "sum alpha = " << sum_alpha << std::endl;
-                        std::cerr << "new weights = ";
                         auto weights = sum_pt->values_;
                         std::for_each(weights.begin(), weights.end(), [sum_alpha](double& d) {d /= sum_alpha;});
-
-                        for (auto w : weights) std::cerr << w << ", ";
-                        std::cerr << std::endl;
-                        std::cerr << "*********************************" << std::endl;
                         sum_pt->set_weights(weights);
                     }
                 }
