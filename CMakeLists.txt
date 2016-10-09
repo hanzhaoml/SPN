@@ -22,7 +22,7 @@ find_package(Boost 1.55.0 COMPONENTS system filesystem thread program_options RE
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "/Users/hanzhao/ClionProjects/SPN-EM/")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "/home/hanzhao/Documents/Projects/SPN")
 
 # Online learning
 add_executable(online_learning ${SOURCE_FILES_ONLINE})
