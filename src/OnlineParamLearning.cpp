@@ -752,7 +752,6 @@ namespace SPN {
                         for (size_t k = 0; k < pt->num_children(); ++k) {
                             sst[pt][k] = sum_pt->weights()[k] *
                                     exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
-                            assert (sst[pt][k] >= 0.0 && sst[pt][k] <= 1.0);
                         }
                     }
                 }
