@@ -148,6 +148,8 @@ namespace SPN {
 
         friend class OnlineADF;
 
+        friend class OnlineBMM;
+
         friend class OnlineExpoGD;
 
         friend class OnlineProjectedGD;
