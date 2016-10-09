@@ -883,7 +883,6 @@ namespace SPN {
                         for (size_t k = 0; k < pt->num_children(); ++k) {
                             sst[pt][k] = sum_pt->weights()[k] *
                                          exp(pt->dr() + pt->children()[k]->fr() - spn.root_->fr());
-                            assert (sst[pt][k] >= 0.0 && sst[pt][k] <= 1.0);
                         }
                     }
                 }
@@ -901,12 +900,6 @@ namespace SPN {
                         auto weights = sum_pt->values_;
                         std::for_each(weights.begin(), weights.end(), [sum_alpha](double& d) {d /= sum_alpha;});
                         sum_pt->set_weights(weights);
-                        std::cerr << "New weight: ";
-                        for (auto v : sum_pt->weights()) {
-                            std::cerr << v << ", ";
-                        }
-                        std::cerr << std::endl;
-                        std::cerr << "***************************************" << std::endl;
                     }
                 }
             }
