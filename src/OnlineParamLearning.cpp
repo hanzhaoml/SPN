@@ -901,6 +901,12 @@ namespace SPN {
                         auto weights = sum_pt->values_;
                         std::for_each(weights.begin(), weights.end(), [sum_alpha](double& d) {d /= sum_alpha;});
                         sum_pt->set_weights(weights);
+                        std::cerr << "New weight: ";
+                        for (auto v : sum_pt->weights()) {
+                            std::cerr << v << ", ";
+                        }
+                        std::cerr << std::endl;
+                        std::cerr << "***************************************" << std::endl;
                     }
                 }
             }
