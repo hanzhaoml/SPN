@@ -768,7 +768,7 @@ namespace SPN {
                                                 (prior_scale - 0.5));
                             sum_pt->values_[k] += sst[pt][k] * log((prior_scale * sum_pt->weights()[k] + 0.5)
                                                                    / (prior_scale + 0.5));
-                            sum_pt->values_[k] = (prior_scale - 0.5) * exp(sum_pt->values_[k]) + 0.5;
+                            sum_pt->values_[k] = exp(sum_pt->values_[k]);
                         }
                         // Update model parameter using the posterior mean of the one-step update posterior.
                         sum_alpha = 0.0;
