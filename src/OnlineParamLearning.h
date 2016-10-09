@@ -182,7 +182,8 @@ namespace SPN {
             algo_name_ = "OnlineBMM";
         }
 
-        OnlineBMM(double stop_thred, double prior_scale) : stop_thred_(stop_thred), prior_scale_(prior_scale) {
+        OnlineBMM(double stop_thred, double prior_scale) :
+                stop_thred_(stop_thred), prior_scale_(prior_scale) {
             algo_name_ = "OnlineBMM";
         }
 
