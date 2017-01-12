@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
         learning = new OnlineExpoGD(stop_thred, lrate, shrink_weight);
     } else if (algo_name == "sma") {
         learning = new OnlineSMA(stop_thred, lrate, shrink_weight);
-    } else if (algo_name == "em") {
+    } else if (algo_name == "em" || algo_name == "cccp") {
         learning = new OnlineExpectMax(stop_thred, lap_lambda);
     } else if (algo_name == "cvb") {
         learning = new OnlineCollapsedVB(stop_thred, lrate, prior_scale, seed);

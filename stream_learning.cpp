@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
         slearning = new StreamExpoGD(lrate);
     } else if (stream_algo == "sma") {
         slearning = new StreamSMA(lrate);
-    } else if (stream_algo == "em") {
+    } else if (stream_algo == "em" || stream_algo == "cccp") {
         slearning = new StreamExpectMax(lrate);
     } else {
         std::cerr << "Please choose from pgd, eg, sma or em" << std::endl;

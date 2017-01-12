@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
         learning = new SMA(num_iters, stop_thred, lrate, shrink_weight);
     } else if (algo_name == "em") {
         learning = new ExpectMax(num_iters, stop_thred, lap_smooth);
-    } else if (algo_name == "cvb") {
+    } else if (algo_name == "cvb" || algo_name == "cccp") {
         learning = new CollapsedVB(num_iters, stop_thred, lrate, prior_scale, seed);
     } else if (algo_name == "lbfgs") {
         learning = new LBFGS(num_iters, proj_eps, stop_thred, lrate, shrink_weight, history_window);
