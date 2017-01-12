@@ -70,42 +70,35 @@ namespace SPN {
     }
 
     void SPNetwork::build_order_() {
-        // Build top-down order and bottom-up order
-        bool visited[num_nodes_];
-        for (size_t i = 0; i < num_nodes_; ++i) visited[i] = false;
-        std::queue<SPNNode *> forward_p;
-        std::stack<SPNNode *> backward_p;
-        forward_p.push(root_);
-        visited[root_->id_] = true;
+        // Build top-down order and bottom-up order using topological ordering algorithm.
+        std::queue<SPNNode *> active_list;
+        // r_parents records the number of parents of a specific node during the topological
+        // ordering algorithm.
+        size_t r_parents[num_nodes_];
+        for (size_t i = 0; i < num_nodes_; ++i) {
+            r_parents[i] = id2node_[i]->num_parents();
+        }
         SPNNode *pt = nullptr;
-        while (!forward_p.empty()) {
-            pt = forward_p.front();
-            // Store indicators.
+        active_list.push(root_);
+        assert (r_parents[root_->id_] == 0);
+        while (!active_list.empty()) {
+            pt = active_list.front();
+            backward_order_.push_back(pt);
             if (pt->type() == SPNNodeType::VARNODE) {
                 dist_nodes_.push_back((VarNode *) pt);
-            } else {
-                backward_p.push(pt);
-                backward_order_.push_back(pt);
             }
             for (SPNNode *child : pt->children()) {
-                if (!visited[child->id_]) {
-                    visited[child->id_] = true;
-                    forward_p.push(child);
+                r_parents[child->id_] -= 1;
+                if (r_parents[child->id_] == 0) {
+                    active_list.push(child);
                 }
             }
-            forward_p.pop();
+            active_list.pop();
         }
-        for (SPNNode *p : dist_nodes_) {
-            backward_order_.push_back(p);
-            forward_order_.push_back(p);
+        assert (backward_order_.size() == num_nodes_);
+        for (auto iter = backward_order_.rbegin(); iter != backward_order_.rend(); ++iter) {
+            forward_order_.push_back(*iter);
         }
-        while (!backward_p.empty()) {
-            pt = backward_p.top();
-            forward_order_.push_back(pt);
-            backward_p.pop();
-        }
-        assert(forward_order_.size() == backward_order_.size());
-        assert(forward_order_.size() == num_nodes_);
     }
 
     void SPNetwork::condense_(SPNNode *node, std::unordered_set<SPNNode *> &visited) {
@@ -167,7 +160,7 @@ namespace SPN {
         } else {
             // One main difference for product node is that we don't need to consider whether a grandson
             // has already been added or not due to the decomposability constraint at the product node.
-            // We can make the following claim to simply the code:
+            // We can make the following claim to simplify the code:
             // For any two branches i, j of a product node p, there is not any edge connection one node
             // from sub-SPN rooted at i to another node from sub-SPN rooted at j.
             std::vector<SPNNode *> new_children;
