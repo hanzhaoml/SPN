@@ -99,6 +99,30 @@ namespace SPN {
         for (auto iter = backward_order_.rbegin(); iter != backward_order_.rend(); ++iter) {
             forward_order_.push_back(*iter);
         }
+        // Using the forward order to build the scope of each node.
+        for (auto node : forward_order_) {
+            if (node->type() == SPNNodeType::SUMNODE) {
+                assert(node->scope().size() == 0);
+                for (int t : node->children()[0]->scope()) {
+                    node->add_to_scope(t);
+                }
+            } else if (node->type() == SPNNodeType::PRODNODE) {
+                assert(node->scope().size() == 0);
+                for (SPNNode *child : node->children()) {
+                    for (int t : child->scope())
+                        node->add_to_scope(t);
+                }
+            } else {
+                // SPNNodeType == VARNODE
+                assert(node->scope().size() == 1);
+            }
+        }
+        // Check
+        std::cout << "Type of root node = " << root_->type_string() << std::endl;
+        std::cout << "Size of scope = " << root_->scope().size() << ". Scope of the root node: " << std::endl;
+        for (int t : root_->scope())
+            std::cout << t << " ";
+        std::cout << std::endl;
     }
 
     void SPNetwork::condense_(SPNNode *node, std::unordered_set<SPNNode *> &visited) {

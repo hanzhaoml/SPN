@@ -160,7 +160,6 @@ namespace SPN {
                 }
             }
             fin.close();
-            // Build scope to enforce consistency and decomposability
             std::vector<SPNNode *> roots;
             for (const auto &kv : id2node) {
                 if (kv.second->num_parents() == 0)
@@ -170,50 +169,6 @@ namespace SPN {
             assert(roots.size() == 1);
             SPNNode *root = roots[0];
             SPNetwork *spn = new SPNetwork(root);
-            // Build scope, forward-backward process
-            std::queue<SPNNode *> forward;
-            std::stack<SPNNode *> backward;
-            std::unordered_set<SPNNode *> visited;
-            visited.insert(root);
-            forward.push(root);
-            // forward process
-            while (!forward.empty()) {
-                SPNNode *node = forward.front();
-                for (SPNNode *child : node->children()) {
-                    if (visited.find(child) == visited.end()) {
-                        visited.insert(child);
-                        forward.push(child);
-                    }
-                }
-                backward.push(node);
-                forward.pop();
-            }
-            // backward process to compute the scope of each internal node
-            while (!backward.empty()) {
-                SPNNode *node = backward.top();
-                if (node->type() == SPNNodeType::SUMNODE) {
-                    assert(node->scope().size() == 0);
-                    for (int t : node->children()[0]->scope()) {
-                        node->add_to_scope(t);
-                    }
-                } else if (node->type() == SPNNodeType::PRODNODE) {
-                    assert(node->scope().size() == 0);
-                    for (SPNNode *child : node->children()) {
-                        for (int t : child->scope())
-                            node->add_to_scope(t);
-                    }
-                } else {
-                    // SPNNodeType == VARNODE
-                    assert(node->scope().size() == 1);
-                }
-                backward.pop();
-            }
-            // Check
-            std::cout << "Type of root node = " << root->type_string() << std::endl;
-            std::cout << "Size of scope = " << root->scope().size() << ". Scope of the root node: " << std::endl;
-            for (int t : root->scope())
-                std::cout << t << " ";
-            std::cout << std::endl;
             return spn;
         }
 
