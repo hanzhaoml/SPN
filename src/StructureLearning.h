@@ -17,8 +17,8 @@ namespace SPN {
 
         virtual ~LearnOptSPN() = default;
 
-        SPNetwork *learn(const std::vector<const std::vector<double>> &trains,
-                         const std::vector<const std::vector<double>> &valids, double eps, bool verbose=false);
+        SPNetwork *learn(const std::vector<std::vector<double>> &trains,
+                         const std::vector<std::vector<double>> &valids, double eps, bool verbose=false);
     };
 }
 

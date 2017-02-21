@@ -14,7 +14,6 @@
 
 namespace po = boost::program_options;
 
-using namespace std;
 using SPN::SPNNode;
 using SPN::SumNode;
 using SPN::ProdNode;
@@ -94,14 +93,14 @@ int main(int argc, char** argv) {
     SPNetwork *spn = SPN::utils::load(model_filename);
     spn->init();
     std::cout << "Network statistics after initialization: " << std::endl;
-    cout << "Network height: " << spn->height() << endl;
-    cout << "Network size: " << spn->size() << endl;
-    cout << "Network number of nodes: " << spn->num_nodes() << endl;
-    cout << "Network number of edges: " << spn->num_edges() << endl;
-    cout << "Network number of varnodes: " << spn->num_var_nodes() << endl;
-    cout << "Network number of sumnodes: " << spn->num_sum_nodes() << endl;
-    cout << "Network number of prodnodes: " << spn->num_prod_nodes() << endl;
-    cout << "**********************************" << endl;
+    std::cout << "Network height: " << spn->height() << std::endl;
+    std::cout << "Network size: " << spn->size() << std::endl;
+    std::cout << "Network number of nodes: " << spn->num_nodes() << std::endl;
+    std::cout << "Network number of edges: " << spn->num_edges() << std::endl;
+    std::cout << "Network number of varnodes: " << spn->num_var_nodes() << std::endl;
+    std::cout << "Network number of sumnodes: " << spn->num_sum_nodes() << std::endl;
+    std::cout << "Network number of prodnodes: " << spn->num_prod_nodes() << std::endl;
+    std::cout << "**********************************" << std::endl;
     OnlineParamLearning *learning = nullptr;
     if (algo_name == "pgd") {
         learning = new OnlineProjectedGD(proj_eps, stop_thred, lrate, shrink_weight);
@@ -123,7 +122,7 @@ int main(int argc, char** argv) {
     }
     // Compute test set average log-likelihoods
     std::clock_t t_start = std::clock();
-    vector<double> logps = spn->logprob(test_data);
+    std::vector<double> logps = spn->logprob(test_data);
     std::clock_t t_end = std::clock();
     std::cout << "CPU time = " << 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC << " milliseconds\n";
     double avg_logp = 0.0;
@@ -145,7 +144,7 @@ int main(int argc, char** argv) {
     // Random initialization of model parameters.
     spn->set_random_params(seed);
     const auto &tokens = split(model_filename, '.');
-    string data_name = split(tokens[0], '/')[1];
+    std::string data_name = split(tokens[0], '/')[1];
     t_start = std::clock();
     learning->fit(training_data, valid_data, *spn, num_iters, true);
     t_end = std::clock();
@@ -155,7 +154,7 @@ int main(int argc, char** argv) {
     avg_logp = 0.0;
     for (double ll : logps) avg_logp += ll;
     avg_logp /= num_test;
-    for (double logp : logps) cout << logp << std::endl;
+    for (double logp : logps) std::cout << logp << std::endl;
     std::cout << "Test average log-likelihoods = " << avg_logp << std::endl;
     std::cout << "**********************************************************" << std::endl;
     if (vm.count("output_model")) {
