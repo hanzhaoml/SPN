@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
     std::cout << "**********************************" << std::endl;
     // Compute test set average log-likelihoods
     std::clock_t t_start = std::clock();
-    vector<double> test_logps = spn->logprob(test_data);
+    std::vector<double> test_logps = spn->logprob(test_data);
     std::clock_t t_end = std::clock();
     std::cout << "CPU time = " << 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC << " milliseconds\n";
 
@@ -85,13 +85,13 @@ int main(int argc, char *argv[]) {
     avg_logp /= num_test;
     std::cout << "Average test log-likelihoods = " << avg_logp << std::endl;
 
-    vector<double> train_logps = spn->logprob(training_data);
+    std::vector<double> train_logps = spn->logprob(training_data);
     avg_logp = 0.0;
     for (double ll : train_logps) avg_logp += ll;
     avg_logp /= num_train;
     std::cout << "Average training log-likelihoods = " << avg_logp << std::endl;
 
-    vector<double> valid_logps = spn->logprob(valid_data);
+    std::vector<double> valid_logps = spn->logprob(valid_data);
     avg_logp = 0.0;
     for (double ll : valid_logps) avg_logp += ll;
     avg_logp /= num_valid;
