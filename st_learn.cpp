@@ -5,6 +5,7 @@
 #include "src/SPNetwork.h"
 #include "src/utils.h"
 #include "src/StructureLearning.h"
+#include "src/BatchParamLearning.h"
 
 #include <fstream>
 #include <queue>
@@ -16,6 +17,8 @@ namespace po = boost::program_options;
 
 using SPN::SPNetwork;
 using SPN::LearnOptSPN;
+using SPN::BatchParamLearning;
+using SPN::ExpectMax;
 
 
 int main(int argc, char *argv[]) {
@@ -85,18 +88,21 @@ int main(int argc, char *argv[]) {
     avg_logp /= num_test;
     std::cout << "Average test log-likelihoods = " << avg_logp << std::endl;
 
-    std::vector<double> train_logps = spn->logprob(training_data);
+    BatchParamLearning *param_learner = new ExpectMax(20, 1e-3, 1e-2);
+    param_learner->fit(training_data, valid_data, *spn, true);
+    test_logps = spn->logprob(test_data);
     avg_logp = 0.0;
-    for (double ll : train_logps) avg_logp += ll;
-    avg_logp /= num_train;
-    std::cout << "Average training log-likelihoods = " << avg_logp << std::endl;
+    for (double ll : test_logps) avg_logp += ll;
+    avg_logp /= num_test;
+    std::cout << "Test average log-likelihoods = " << avg_logp << std::endl;
+    std::cout << "**********************************************************" << std::endl;
 
-    std::vector<double> valid_logps = spn->logprob(valid_data);
-    avg_logp = 0.0;
-    for (double ll : valid_logps) avg_logp += ll;
-    avg_logp /= num_valid;
-    std::cout << "Average validation log-likelihood = " << avg_logp << std::endl;
-    std::cout << "-----------------------------------------------" << std::endl;
+//    std::vector<double> valid_logps = spn->logprob(valid_data);
+//    avg_logp = 0.0;
+//    for (double ll : valid_logps) avg_logp += ll;
+//    avg_logp /= num_valid;
+//    std::cout << "Average validation log-likelihood = " << avg_logp << std::endl;
+//    std::cout << "-----------------------------------------------" << std::endl;
     if (vm.count("model")) {
         SPN::utils::save(spn, model_filename);
     }
