@@ -15,6 +15,5 @@ namespace SPN {
         void save(SPNetwork*, std::string);
 
         std::vector<std::vector<double>> load_data(std::string);
-
     }
 }
