@@ -15,11 +15,6 @@
 
 namespace po = boost::program_options;
 
-using SPN::SPNNode;
-using SPN::SumNode;
-using SPN::ProdNode;
-using SPN::VarNode;
-using SPN::SPNNodeType;
 using SPN::SPNetwork;
 using SPN::BatchParamLearning;
 using SPN::ProjectedGD;
