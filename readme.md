@@ -2,13 +2,16 @@
 
 @Author: [Han Zhao](http://www.cs.cmu.edu/~hzhao1/)
 
-@Note: Please cite the following paper if you use the tool developed in this package.
+@Note: Please cite the following papers if you use the tool developed in this package.
 
 **A Unified Approach for Learning the Parameters of Sum-Product Networks**
 by H. Zhao, P. Poupart and G. Gordon, NIPS 2016.
 
 **Collapsed Variational Inference for Sum-Product Networks**
 by H. Zhao, T. Adel, G. Gordon and B. Amos, ICML 2016.
+
+**Linear Time Computation of Moments in Sum-Product Networks**
+by H. Zhao and G. Gordon, NIPS 2017.
 
 @Required lib:
  - Boost (>= 1.55)
@@ -22,9 +25,11 @@ algorithms for SPNs:
 
 1.  Projected Gradient Descent.
 2.  Exponentiated Gradient Method.
-3.  Sequential Monomial Approximation (NIPS 2016).
-4.  Concave-Convex Procedure/Expectation Maximization (NIPS 2016).
-5.  Collapsed Variational Inference (ICML 2016).
+3.  Sequential Monomial Approximation (Zhao et al., NIPS 2016).
+4.  Concave-Convex Procedure/Expectation Maximization (Zhao et al., NIPS 2016).
+5.  Collapsed Variational Inference (Zhao et al., ICML 2016).
+6.  Online Bayesian Moment Matching (Rashwan et al., AISTATS 2016)
+7.  Assumed Density Filtering (Zhao et al., NIPS 2017)
 
 -------------------------------------------------------------------------------
 
